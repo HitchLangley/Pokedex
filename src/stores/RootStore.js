@@ -1,8 +1,10 @@
 import { createContext, useContext } from 'react'
 import { reaction } from 'mobx'
 import { api as defaultApi } from '../api/pokeapi'
+import { createBackend } from '../api/backend'
 import { createStorage } from '../utils/storage'
-import { buildQuery, parseQuery } from '../utils/urlState'
+import { parseQuery } from '../utils/urlState'
+import { AuthStore } from './AuthStore'
 import { FavoritesStore } from './FavoritesStore'
 import { PokedexStore } from './PokedexStore'
 import { UiStore } from './UiStore'
@@ -10,12 +12,14 @@ import { UiStore } from './UiStore'
 export class RootStore {
   constructor ({
     api = defaultApi,
+    backend = createBackend(),
     storage = createStorage(),
     location = globalThis.location,
     history = globalThis.history,
     prefersDark = globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false
   } = {}) {
-    this.favorites = new FavoritesStore({ storage })
+    this.auth = new AuthStore({ backend })
+    this.favorites = new FavoritesStore({ storage, backend })
     this.ui = new UiStore({ storage, prefersDark, location, history })
     this.pokedex = new PokedexStore({
       api,
@@ -31,20 +35,19 @@ export class RootStore {
         () => this.pokedex.loadPageDetails(),
         { fireImmediately: true }
       ),
-      // keep the address bar in sync with the filters
+      // keep the address bar in sync with the filters (only on the main list page)
       reaction(
-        () => buildQuery({
-          search: this.pokedex.search.trim(),
-          selectedTypes: this.pokedex.selectedTypes,
-          page: this.pokedex.currentPage,
-          pageSize: this.pokedex.pageSize,
-          favoritesOnly: this.pokedex.favoritesOnly
-        }),
+        () => this.pokedex.query,
         (query) => {
-          if (!history || !location) return
-          history.replaceState(null, '', `${location.pathname}${query}${location.hash}`)
+          if (!history || !location || !isHomePath(location.pathname)) return
+          history.replaceState(history.state, '', `${location.pathname}${query}${location.hash}`)
         },
         { delay: 300 }
+      ),
+      // favourites follow the signed-in user
+      reaction(
+        () => this.auth.user?.id ?? null,
+        (userId) => (userId ? this.favorites.attach() : this.favorites.detach())
       )
     ]
 
@@ -58,6 +61,11 @@ export class RootStore {
   dispose () {
     this.disposers.forEach((dispose) => dispose())
   }
+}
+
+function isHomePath (pathname) {
+  const base = import.meta.env.BASE_URL || '/'
+  return pathname === base || `${pathname}/` === base
 }
 
 export const StoreContext = createContext(null)

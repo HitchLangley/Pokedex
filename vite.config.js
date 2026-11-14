@@ -2,9 +2,12 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
-  // relative base so the build works from any GitHub Pages sub-path
-  base: './',
+  // "/" when served by our Node server, "/<repo>/" for the static GitHub Pages build
+  base: process.env.VITE_BASE || '/',
   plugins: [react()],
+  server: {
+    proxy: { '/api': 'http://localhost:3000' }
+  },
   build: {
     // antd is a single large-but-cacheable chunk
     chunkSizeWarningLimit: 800,

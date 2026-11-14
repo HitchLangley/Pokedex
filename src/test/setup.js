@@ -5,7 +5,7 @@ import { afterEach } from 'vitest'
 afterEach(cleanup)
 
 // antd's responsive helpers rely on matchMedia, which jsdom doesn't implement
-if (!window.matchMedia) {
+if (typeof window !== 'undefined' && !window.matchMedia) {
   window.matchMedia = (query) => ({
     matches: false,
     media: query,
@@ -18,4 +18,4 @@ if (!window.matchMedia) {
   })
 }
 
-window.scrollTo = () => {}
+if (typeof window !== 'undefined') window.scrollTo = () => {}

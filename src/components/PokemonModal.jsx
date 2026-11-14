@@ -97,10 +97,10 @@ const PokemonDetails = observer(function PokemonDetails ({ name }) {
   )
 })
 
-export const PokemonModal = observer(function PokemonModal () {
-  const { pokedex, ui } = useStores()
+// `list` is what prev / next go through: the filtered list on the main page, favourites on the profile
+export const PokemonModal = observer(function PokemonModal ({ list }) {
+  const { ui } = useStores()
   const name = ui.selectedPokemon
-  const list = pokedex.filtered
   const position = name ? list.findIndex((p) => p.name === name) : -1
   const prev = position > 0 ? list[position - 1] : null
   const next = position >= 0 && position < list.length - 1 ? list[position + 1] : null

@@ -1,16 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router'
 import { App } from './App'
 import { RootStore, StoreContext } from './stores/RootStore'
-import { createFakeApi, memoryStorage } from './test/fixtures'
+import { TRAINER, createFakeApi, createFakeBackend, memoryStorage } from './test/fixtures'
 
-function renderApp () {
+function renderApp ({ backend = createFakeBackend(), path = '/' } = {}) {
   const { storage } = memoryStorage()
-  const store = new RootStore({ api: createFakeApi(), storage, location: null, history: null, prefersDark: false })
+  const store = new RootStore({ api: createFakeApi(), backend, storage, location: null, history: null, prefersDark: false })
   render(
     <StoreContext.Provider value={store}>
-      <App />
+      <MemoryRouter initialEntries={[path]}>
+        <App />
+      </MemoryRouter>
     </StoreContext.Provider>
   )
   return store
@@ -71,5 +74,35 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: 'Toggle dark mode' }))
     expect(store.ui.dark).toBe(true)
     expect(document.documentElement.dataset.theme).toBe('dark')
+  })
+
+  it('offers to sign in when signed out', async () => {
+    renderApp()
+    const link = await screen.findByRole('link', { name: /sign in/i })
+    expect(link).toHaveAttribute('href', '/api/auth/github?returnTo=%2F')
+  })
+
+  it('hides accounts in the static build', async () => {
+    renderApp({ backend: createFakeBackend({ enabled: false }) })
+    await screen.findByRole('heading', { name: 'Bulbasaur' })
+    expect(screen.queryByRole('link', { name: /sign in/i })).not.toBeInTheDocument()
+  })
+
+  it('shows the profile with server-side favourites', async () => {
+    const backend = createFakeBackend({ user: TRAINER, favorites: ['mewtwo', 'squirtle'] })
+    renderApp({ backend, path: '/profile' })
+
+    expect(await screen.findByRole('heading', { name: 'Ash Ketchum' })).toBeInTheDocument()
+    await waitFor(() => expect(cardNames()).toEqual(['Mewtwo', 'Squirtle']))
+    expect(await screen.findAllByText('Psychic')).toHaveLength(2) // type breakdown + card
+
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Remove Mewtwo from favourites' }))
+    await waitFor(() => expect(cardNames()).toEqual(['Squirtle']))
+    expect(backend.state.favorites).toEqual(['squirtle'])
+  })
+
+  it('asks to sign in on the profile page when signed out', async () => {
+    renderApp({ path: '/profile' })
+    expect(await screen.findByText('Sign in to see your profile')).toBeInTheDocument()
   })
 })

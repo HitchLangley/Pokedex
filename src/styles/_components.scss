@@ -384,3 +384,140 @@
     text-overflow: ellipsis;
   }
 }
+
+// ---- account ---------------------------------------------------------------
+
+.account {
+  &__user {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 4px;
+    padding: 2px 10px 2px 2px;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover,
+    &:focus-visible {
+      background: rgba(255, 255, 255, 0.28);
+    }
+
+    .ant-avatar {
+      border: 2px solid rgba(255, 255, 255, 0.8);
+    }
+  }
+
+  &__login.ant-btn {
+    margin-left: 4px;
+    border-color: rgba(255, 255, 255, 0.7) !important;
+    background: transparent !important;
+  }
+
+  &__label {
+    @include down(sm) {
+      display: none;
+    }
+  }
+}
+
+.account__user .account__label {
+  @include down(sm) {
+    display: none;
+  }
+}
+
+// ---- profile ---------------------------------------------------------------
+
+.profile {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &__center {
+    display: grid;
+    place-items: center;
+    min-height: 40vh;
+  }
+
+  &__card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 20px 24px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: $radius;
+    background:
+      radial-gradient(circle at 100% 0, color-mix(in srgb, #{$brand} 14%, transparent), transparent 55%),
+      var(--surface);
+    box-shadow: var(--shadow);
+    animation: card-in 0.35s ease-out both;
+  }
+
+  &__avatar {
+    flex: none;
+    box-shadow: 0 0 0 4px var(--surface), 0 0 0 6px $brand;
+  }
+
+  &__who {
+    flex: 1 1 220px;
+    min-width: 0;
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 26px;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    color: var(--text-muted);
+
+    a {
+      color: inherit;
+      font-weight: 600;
+    }
+  }
+
+  &__stats {
+    display: flex;
+    gap: 32px;
+
+    @include down(sm) {
+      width: 100%;
+      justify-content: space-around;
+    }
+  }
+
+  &__star {
+    color: #faad14;
+  }
+
+  &__types {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 16px;
+  }
+
+  &__type {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-muted);
+  }
+
+  &__heading {
+    margin: 4px 0 0;
+    font-size: 20px;
+  }
+}

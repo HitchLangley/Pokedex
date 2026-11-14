@@ -27,8 +27,12 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm test
+      # GitHub Pages hosts the front-end only: favourites stay in the browser, no accounts.
+      # The full-stack version (Node API + GitHub login) is deployed to Render, see render.yaml.
       - run: npm run build
         env:
+          VITE_STATIC: '1'
+          VITE_BASE: /${{ github.event.repository.name }}/
           VITE_REPO_URL: ${{ github.server_url }}/${{ github.repository }}
       - uses: actions/upload-pages-artifact@v3
         if: github.ref == 'refs/heads/main'

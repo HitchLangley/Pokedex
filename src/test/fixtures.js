@@ -56,3 +56,29 @@ export function memoryStorage (initial = {}) {
 }
 
 export const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
+
+// In-memory stand-in for our Node API
+export function createFakeBackend ({ user = null, favorites = [], enabled = true, failWrites = false } = {}) {
+  const state = { user, favorites: [...favorites], calls: [] }
+  const write = (fn) => async (...args) => {
+    state.calls.push(fn.name)
+    if (failWrites) throw new Error('server down')
+    return fn(...args)
+  }
+  return {
+    state,
+    enabled,
+    me: async () => ({ user: state.user, providers: { github: true, dev: false } }),
+    logout: write(function logout () { state.user = null; return null }),
+    listFavorites: async () => [...state.favorites],
+    addFavorite: write(function addFavorite (name) { if (!state.favorites.includes(name)) state.favorites.push(name); return null }),
+    removeFavorite: write(function removeFavorite (name) { state.favorites = state.favorites.filter((n) => n !== name); return null }),
+    importFavorites: write(function importFavorites (names) {
+      names.forEach((n) => { if (!state.favorites.includes(n)) state.favorites.push(n) })
+      return [...state.favorites]
+    }),
+    loginUrl: (provider, returnTo = '/') => `/api/auth/${provider}?returnTo=${encodeURIComponent(returnTo)}`
+  }
+}
+
+export const TRAINER = { id: 1, provider: 'github', login: 'ash', name: 'Ash Ketchum', avatarUrl: null, createdAt: '2026-01-02T00:00:00Z' }

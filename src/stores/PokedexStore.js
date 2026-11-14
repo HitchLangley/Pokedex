@@ -1,6 +1,6 @@
 import { makeAutoObservable, observable, runInAction } from 'mobx'
 import { normalizePokemon } from '../utils/pokemon'
-import { PAGE_SIZES } from '../utils/urlState'
+import { PAGE_SIZES, buildQuery } from '../utils/urlState'
 
 export class PokedexStore {
   // full list of { id, name } — small enough (~1300 entries) to filter on the client
@@ -78,6 +78,22 @@ export class PokedexStore {
 
   get hasFilters () {
     return Boolean(this.search.trim() || this.selectedTypes.length || this.favoritesOnly)
+  }
+
+  // query string describing the current view, e.g. "?q=char&types=fire"
+  get query () {
+    return buildQuery({
+      search: this.search.trim(),
+      selectedTypes: this.selectedTypes,
+      page: this.currentPage,
+      pageSize: this.pageSize,
+      favoritesOnly: this.favoritesOnly
+    })
+  }
+
+  // name -> id, for lists that only know names (favourites)
+  get idByName () {
+    return new Map(this.index.map(({ name, id }) => [name, id]))
   }
 
   get isListLoading () {

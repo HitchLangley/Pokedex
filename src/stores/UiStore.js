@@ -58,7 +58,7 @@ export class UiStore {
   writeHash (name, mode) {
     if (!this.history || !this.location) return
     const url = `${this.location.pathname}${this.location.search}${name ? `#${name}` : ''}`
-    if (mode === 'push') this.history.pushState(null, '', url)
-    else this.history.replaceState(null, '', url)
+    if (mode === 'push') this.history.pushState(this.history.state, '', url)
+    else this.history.replaceState(this.history.state, '', url)
   }
 }
