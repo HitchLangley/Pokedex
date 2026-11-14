@@ -53,12 +53,23 @@ describe('App', () => {
     await waitFor(() => expect(cardNames()).toEqual(['Pikachu']))
   })
 
-  it('opens the details dialog', async () => {
+  it('opens and closes the details dialog', async () => {
     const user = userEvent.setup()
-    renderApp()
+    const store = renderApp()
     await user.click(await screen.findByRole('article', { name: 'Mewtwo' }))
     const dialog = await screen.findByRole('dialog')
     expect(within(dialog).getByRole('heading', { name: 'Mewtwo' })).toBeInTheDocument()
     expect(within(dialog).getByText('Overgrow')).toBeInTheDocument()
+
+    await user.click(within(dialog).getByRole('button', { name: 'Close' }))
+    await waitFor(() => expect(store.ui.selectedPokemon).toBeNull())
+  })
+
+  it('toggles dark mode', async () => {
+    const user = userEvent.setup()
+    const store = renderApp()
+    await user.click(screen.getByRole('button', { name: 'Toggle dark mode' }))
+    expect(store.ui.dark).toBe(true)
+    expect(document.documentElement.dataset.theme).toBe('dark')
   })
 })

@@ -16,7 +16,7 @@ export class RootStore {
     prefersDark = globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false
   } = {}) {
     this.favorites = new FavoritesStore({ storage })
-    this.ui = new UiStore({ storage, prefersDark })
+    this.ui = new UiStore({ storage, prefersDark, location, history })
     this.pokedex = new PokedexStore({
       api,
       storage,
@@ -47,6 +47,12 @@ export class RootStore {
         { delay: 300 }
       )
     ]
+
+    if (globalThis.addEventListener && history) {
+      const onPopState = () => this.ui.syncFromLocation()
+      globalThis.addEventListener('popstate', onPopState)
+      this.disposers.push(() => globalThis.removeEventListener('popstate', onPopState))
+    }
   }
 
   dispose () {

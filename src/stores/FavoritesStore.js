@@ -7,7 +7,7 @@ export class FavoritesStore {
 
   constructor ({ storage }) {
     this.storage = storage
-    makeAutoObservable(this, { storage: false })
+    makeAutoObservable(this, { storage: false }, { autoBind: true })
     this.names.replace(storage.get(KEY, []))
   }
 
