@@ -25,8 +25,11 @@ export async function connect ({ databaseUrl, dataDir, memory = false }) {
   let client
   if (databaseUrl) {
     const { default: pg } = await import('pg')
-    const ssl = /localhost|127\.0\.0\.1/.test(databaseUrl) ? false : { rejectUnauthorized: false }
-    client = new pg.Pool({ connectionString: databaseUrl, ssl, max: 5 })
+    // an explicit ?sslmode=... in the URL (Neon, Supabase, ...) decides; otherwise TLS for remote hosts
+    const local = /@(localhost|127\.0\.0\.1)[:/]/.test(databaseUrl)
+    const options = { connectionString: databaseUrl, max: 5 }
+    if (!/[?&]sslmode=/.test(databaseUrl)) options.ssl = local ? false : { rejectUnauthorized: false }
+    client = new pg.Pool(options)
   } else {
     const { PGlite } = await import('@electric-sql/pglite')
     client = memory ? new PGlite() : new PGlite(dataDir)
