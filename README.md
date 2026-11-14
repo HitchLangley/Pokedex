@@ -5,7 +5,7 @@ A responsive pokédex built on top of the open [PokéAPI](https://pokeapi.co/) �
 **Live demo**
 
 - Front-end only (GitHub Pages, favourites kept in the browser): https://hitchlangley.github.io/Pokedex/
-- Full stack (Render, sign in with GitHub): see [Deployment](#deployment)
+- Full stack (Vercel, sign in with GitHub): see [Deployment](#deployment)
 
 ## Features
 
@@ -44,7 +44,7 @@ Extras:
 | CSS preprocessor (bonus) | SCSS |
 | Webpack (bonus) | Vite — today's default build tool for React |
 | Unit tests (bonus) | Vitest, Testing Library, Supertest |
-| Deployment | Render (full stack, `render.yaml`) and GitHub Pages (static front-end) via GitHub Actions |
+| Deployment | Vercel (full stack: static front-end + Express as a serverless function) and GitHub Pages (static front-end) |
 
 ## How it works
 
@@ -65,8 +65,10 @@ Extras:
 Security: OAuth `state` check, `HttpOnly` + `SameSite=Lax` (+ `Secure` in production) session cookie, a required `X-Requested-With` header on writes against CSRF, input validation, same-site-only redirects after login, Helmet security headers with a CSP.
 
 ```
+api/
+  index.js            Vercel serverless entry: wraps the Express app
 server/
-  index.js            entry point
+  index.js            entry point for a regular Node server (`npm start`)
   app.js              Express app: auth routes, favourites API, static front-end
   auth.js             sessions (JWT), GitHub OAuth helpers
   db.js               schema + queries, Postgres or PGlite
@@ -100,18 +102,28 @@ npm start          # serve API + dist/ (production mode needs the env vars below
 
 ## Deployment
 
-### Full stack on Render (free)
+### Full stack on Vercel (free, no card needed)
 
-1. **Database** — create a free Postgres at [neon.tech](https://neon.tech) and copy its connection string.
-2. **Render** — *New → Blueprint*, choose this repository. `render.yaml` describes the service; Render asks for:
-   - `DATABASE_URL` — the Neon connection string
-   - `PUBLIC_URL` — the service address, e.g. `https://pokedex-xxxx.onrender.com` (shown after the first deploy; set it then)
+The front-end is built by Vite and served as static files; every `/api/*` request goes to the Express app running as a serverless function (`api/index.js`, routing in `vercel.json`).
+
+1. **Database** — create a free Postgres at [neon.tech](https://neon.tech). Use the **pooled** connection string (host with `-pooler`), which suits serverless functions.
+2. **Vercel** — *Add New → Project*, import this repository (framework preset: Vite, detected from `vercel.json`). Environment variables:
+   - `DATABASE_URL` — the pooled Neon connection string
+   - `SESSION_SECRET` — a random string of 32+ characters (`openssl rand -hex 32`)
    - `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` — from step 3
-3. **GitHub OAuth app** — [github.com/settings/developers](https://github.com/settings/developers) → *New OAuth App*:
-   - Homepage URL: your `PUBLIC_URL`
-   - Authorization callback URL: `<PUBLIC_URL>/api/auth/github/callback`
 
-The schema is created automatically on start. Free Render services sleep when idle, so the first request after a while takes ~30 s.
+   `PUBLIC_URL` is not needed: the production domain comes from Vercel's `VERCEL_PROJECT_PRODUCTION_URL`.
+3. **GitHub OAuth app** — [github.com/settings/developers](https://github.com/settings/developers) → *New OAuth App*:
+   - Homepage URL: `https://<your-project>.vercel.app`
+   - Authorization callback URL: `https://<your-project>.vercel.app/api/auth/github/callback`
+
+   Then add the client id / secret to Vercel and redeploy.
+
+The schema is created automatically on the first request.
+
+### Any Node.js host
+
+`npm ci --include=dev && npm run build && npm start` runs the API and serves `dist/` from one process (set `DATABASE_URL`, `SESSION_SECRET`, `PUBLIC_URL`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `NODE_ENV=production`).
 
 ### Front-end on GitHub Pages
 

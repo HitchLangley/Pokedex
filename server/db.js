@@ -27,7 +27,8 @@ export async function connect ({ databaseUrl, dataDir, memory = false }) {
     const { default: pg } = await import('pg')
     // an explicit ?sslmode=... in the URL (Neon, Supabase, ...) decides; otherwise TLS for remote hosts
     const local = /@(localhost|127\.0\.0\.1)[:/]/.test(databaseUrl)
-    const options = { connectionString: databaseUrl, max: 5 }
+    // serverless instances each keep their own pool, so keep it small (use a pooled URL, e.g. Neon's -pooler host)
+    const options = { connectionString: databaseUrl, max: Number(process.env.DB_POOL_MAX) || 3 }
     if (!/[?&]sslmode=/.test(databaseUrl)) options.ssl = local ? false : { rejectUnauthorized: false }
     client = new pg.Pool(options)
   } else {

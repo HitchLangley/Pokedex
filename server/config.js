@@ -4,7 +4,9 @@ const production = process.env.NODE_ENV === 'production'
 
 export function loadConfig (env = process.env) {
   const port = Number(env.PORT) || 3000
-  const publicUrl = (env.PUBLIC_URL || `http://localhost:${env.VITE_PORT || 5173}`).replace(/\/$/, '')
+  // on Vercel the production domain is known, so PUBLIC_URL is optional there
+  const vercelUrl = env.VERCEL_PROJECT_PRODUCTION_URL && `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`
+  const publicUrl = (env.PUBLIC_URL || vercelUrl || `http://localhost:${env.VITE_PORT || 5173}`).replace(/\/$/, '')
 
   const config = {
     production,
@@ -26,7 +28,7 @@ export function loadConfig (env = process.env) {
   if (!config.sessionSecret || config.sessionSecret.length < 32) {
     throw new Error('SESSION_SECRET must be set to a random string of at least 32 characters')
   }
-  if (production && !env.PUBLIC_URL) {
+  if (production && !env.PUBLIC_URL && !vercelUrl) {
     throw new Error('PUBLIC_URL must be set in production (e.g. https://pokedex.onrender.com)')
   }
   return config
