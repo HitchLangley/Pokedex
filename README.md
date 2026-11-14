@@ -2,7 +2,7 @@
 
 A small, responsive pokédex built on top of the open [PokéAPI](https://pokeapi.co/) — the front-end variant of the Decision Mapper test task.
 
-**Live demo:** deployed to GitHub Pages by the workflow in `.github/workflows/deploy.yml` (see the repository's *Environments → github-pages* link).
+**Live demo:** https://hitchlangley.github.io/Pokedex/
 
 ## Features
 
