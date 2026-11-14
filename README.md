@@ -81,3 +81,7 @@ One-time setup: *Settings → Pages → Build and deployment → Source: GitHub 
 - Full-stack variant: Node.js API with social login (e.g. GitHub/Google OAuth) and favourites stored per user
 - Sorting (by number, name, total stats) — needs details for the whole filtered list, so best done server-side
 - Evolution chains in the details dialog, i18n using PokéAPI's localised names
+
+## License
+
+[MIT](LICENSE)
